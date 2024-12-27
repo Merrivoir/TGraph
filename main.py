@@ -10,7 +10,7 @@ id_tg = sandjob.id
 allowed_chats = [
     #123456789,
 ]
-me = sandjob.accounts["merrivoir"]["id"]
+me = id_tg
 print(f"ID client: {me}")
 
 # Создаем директорию для логов и загрузок
@@ -20,7 +20,7 @@ os.makedirs(f"data/{id_tg}/groups", exist_ok=True)
 os.makedirs(f"data/{id_tg}/channels", exist_ok=True)
 
 # Инициализация клиента
-client = TelegramClient('merrivoir', api_id, api_hash)
+#client = TelegramClient(tg_id, api_id, api_hash)
 
 #------------------------------------------------------------------------------------------------------------------
 # Функция для логирования сообщений

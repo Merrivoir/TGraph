@@ -25,8 +25,8 @@ for account in accounts:
     print(f"{n} - {account}")
     n = n + 1
 
-choose = int(input("Выберите аккаунт:"))
+choose = int(input("Выберите аккаунт: ")) - 1
 
-api = accounts[keys[choose - 1]]["api"]
-hash = accounts[keys[choose - 1]]["hash"]
-id = accounts[keys[choose - 1]]["id"]
+api = accounts[keys[choose]]["api"]
+hash = accounts[keys[choose]]["hash"]
+id = accounts[keys[choose]]["id"]
