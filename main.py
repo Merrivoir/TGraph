@@ -20,7 +20,7 @@ os.makedirs(f"data/{id_tg}/groups", exist_ok=True)
 os.makedirs(f"data/{id_tg}/channels", exist_ok=True)
 
 # Инициализация клиента
-client = TelegramClient(id_tg, api_id, api_hash)
+client = TelegramClient(str(id_tg), api_id, api_hash)
 
 #------------------------------------------------------------------------------------------------------------------
 # Функция для логирования сообщений
