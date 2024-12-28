@@ -29,4 +29,4 @@ choose = int(input("Выберите аккаунт: ")) - 1
 
 api = accounts[keys[choose]]["api"]
 hash = accounts[keys[choose]]["hash"]
-id = accounts[keys[choose]]["id"]
+name = keys[choose]

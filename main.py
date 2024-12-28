@@ -1,26 +1,31 @@
 from telethon import TelegramClient, events
 import os
+import asyncio
 from datetime import datetime
 from utils import sandjob
 
 api_hash = sandjob.hash
 api_id = sandjob.api
-id_tg = sandjob.id
+name = sandjob.name
 
 allowed_chats = [
     #123456789,
 ]
-me = id_tg
-print(f"ID client: {me}")
 
-# Создаем директорию для логов и загрузок
-os.makedirs(f"data/{id_tg}", exist_ok=True)
-os.makedirs(f"data/{id_tg}/private", exist_ok=True)
-os.makedirs(f"data/{id_tg}/groups", exist_ok=True)
-os.makedirs(f"data/{id_tg}/channels", exist_ok=True)
+dialog_list = {}
+
+genDir = f"data/{name}"
+prvDir = f"data/{name}/private"
+grpDir = f"data/{name}/groups"
+cnlDir = f"data/{name}/channels"
+
+os.makedirs(genDir, exist_ok=True)
+os.makedirs(prvDir, exist_ok=True)
+os.makedirs(grpDir, exist_ok=True)
+os.makedirs(cnlDir, exist_ok=True)
 
 # Инициализация клиента
-client = TelegramClient(str(id_tg), api_id, api_hash)
+client = TelegramClient(name, api_id, api_hash)
 
 #------------------------------------------------------------------------------------------------------------------
 # Функция для логирования сообщений
@@ -46,64 +51,100 @@ def log_general(chat, sender, message, file_path=None):
         log_entry += f"Медиафайл: {file_path}\n"
 
     # Сохраняем лог в файл
-    with open(f"data/{id_tg}/genlog.log", "a", encoding="utf-8") as log_file:
+    with open(f"{genDir}/general.log", "a", encoding="utf-8") as log_file:
         log_file.write(log_entry)
 
-async def list_chats():
+def log_staff(message):
+    
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    log_entry = f"{timestamp}\n{message}\n\n"
+
+    # Сохраняем лог в файл
+    with open(f"{genDir}/staff.log", "a", encoding="utf-8") as log_file:
+        log_file.write(log_entry)
+
+#------------------------------------------------------------------------------------------------------------------
+# Список чатов при запуске
+
+async def chat_list():
     async for dialog in client.iter_dialogs():
-        print(f"{dialog.name}: {dialog.id}")
+        chat_name = dialog.title or dialog.name or "Личный чат"
+        dialog_list[dialog.id] = chat_name
+        print(f"{chat_name}: {dialog.id}")
+    
+    log_staff(dialog_list)
 
 #------------------------------------------------------------------------------------------------------------------
 # Обработчик новых сообщений
-@client.on(events.NewMessage)
-async def handle_new_message(event):
+
+async def update_dialog_list():
+    """Функция для обновления списка диалогов."""
+    global dialog_list
+    while True:
+        async for dialog in client.iter_dialogs():
+            if dialog.id not in dialog_list:
+                chat_name = dialog.title or dialog.name or "Личный чат"
+                dialog_list[dialog.id] = chat_name
+                print(f"Новый диалог: {chat_name}")
+                log_staff(f"Новый диалог: {chat_name}")
+        await asyncio.sleep(10)  # Проверка каждые 10 секунд
+
+#------------------------------------------------------------------------------------------------------------------
+# Обработчик новых сообщений
+
+async def listen_to_messages():
+    @client.on(events.NewMessage)
+    async def handle_new_message(event):
+        msgSender = event.sender_id # Сохраняем ID отправителя
+        msgText = event.message.text or "<Без текста>" # Текст сообщения
+        msgChat = event.chat_id
+        isGroup = event.is_group
+        isChannel = event.is_channel
+        isPrivate = event.is_private
+        
+        if isPrivate:
+            dir = prvDir
+            down = f"{prvDir}/{msgChat}/"
+            log = f"{prvDir}/{msgChat}.log"
+
+        elif isChannel:
+            dir = cnlDir
+            down = f"{cnlDir}/{msgChat}/"
+            log = f"{cnlDir}/{msgChat}.log"
+
+        elif isGroup:
+            dir = grpDir
+            down = f"{grpDir}/{msgChat}/"
+            log = f"{grpDir}/{msgChat}.log"
+
+        print(f"""Private: {isPrivate}
+            Group: {isGroup}
+            Channel: {isChannel}
+            Chat: {msgChat}
+            Sender: {msgSender}
+            Directory: {dir}""")
+
+        if event.media:  # Если сообщение содержит медиа
+            file_path = await event.download_media(file=down)
+            log_message(log, msgSender, msgText, file_path)
+            log_general(msgChat, msgSender, msgText, file_path)
+        else:  # Если это текстовое сообщение
+            log_message(log, msgSender, msgText)
+            log_general(msgChat, msgSender, msgText)
     
-    msgSender = event.sender_id # Сохраняем ID отправителя
-    msgText = event.message.text or "<Без текста>" # Текст сообщения
-    msgChat = event.chat_id
-    isGroup = event.is_group
-    isChannel = event.is_channel
-    isPrivate = event.is_private
-    
-    if isPrivate:
-        dir = f"data/private"
-        down = f"data/private/{msgChat}/"
-        log = f"data/private/{msgChat}.log"
-
-    elif isChannel:
-        dir = f"data/channels"
-        down = f"data/channels/{msgChat}/"
-        log = f"data/channels/{msgChat}.log"
-
-    elif isGroup:
-        dir = f"data/groups"
-        down = f"data/groups/{msgChat}/"
-        log = f"data/groups/{msgChat}.log"
-
-
-    print(f"""
-        Private: {isPrivate}
-        Group: {isGroup}
-        Channel: {isChannel}
-        Chat: {msgChat}
-        Sender: {msgSender}
-        My ID: {me}
-        Directory: {dir}
-        Log: {log}
-        Downloads: {down}
-    """)
-
-    if event.media:  # Если сообщение содержит медиа
-        file_path = await event.download_media(file=down)
-        log_message(log, msgSender, msgText, file_path)
-        log_general(msgChat, msgSender, msgText, file_path)
-    else:  # Если это текстовое сообщение
-        log_message(log, msgSender, msgText)
-        log_general(msgChat, msgSender, msgText)
+    await client.run_until_disconnected()
 
 #------------------------------------------------------------------------------------------------------------------
 # Запускаем клиент
+
+async def main():
+    await chat_list()
+    """Запуск обеих функций параллельно."""
+    await asyncio.gather(
+        listen_to_messages(),
+        update_dialog_list()
+    )
+
+# Запуск клиента
 with client:
-    print("Запуск клиента...")
-    client.loop.run_until_complete(list_chats())
-    client.run_until_disconnected()
+    client.loop.run_until_complete(main())
