@@ -87,7 +87,7 @@ async def update_dialog_list():
                 dialog_list[dialog.id] = chat_name
                 print(f"Новый диалог: {chat_name}")
                 log_staff(f"Новый диалог: {chat_name}")
-        await asyncio.sleep(10)  # Проверка каждые 10 секунд
+        await asyncio.sleep(300)  # Проверка каждые 10 секунд
 
 #------------------------------------------------------------------------------------------------------------------
 # Обработчик новых сообщений
@@ -117,7 +117,7 @@ async def listen_to_messages():
             down = f"{grpDir}/{msgChat}/"
             log = f"{grpDir}/{msgChat}.log"
 
-        print(f"""Private: {isPrivate}
+        log_staff(f"""Private: {isPrivate}
             Group: {isGroup}
             Channel: {isChannel}
             Chat: {msgChat}
