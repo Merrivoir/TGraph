@@ -87,7 +87,7 @@ async def update_dialog_list():
                 dialog_list[dialog.id] = chat_name
                 print(f"Новый диалог: {chat_name}")
                 log_staff(f"Новый диалог: {chat_name}")
-        await asyncio.sleep(300)  # Проверка каждые 10 секунд
+        await asyncio.sleep(300)  # Проверка каждые 30 секунд
 
 #------------------------------------------------------------------------------------------------------------------
 # Обработчик новых сообщений
@@ -107,22 +107,24 @@ async def listen_to_messages():
             down = f"{prvDir}/{msgChat}/"
             log = f"{prvDir}/{msgChat}.log"
 
+        elif isGroup:
+            dir = grpDir
+            down = f"{grpDir}/{msgChat}/"
+            log = f"{grpDir}/{msgChat}.log"
+        
         elif isChannel:
             dir = cnlDir
             down = f"{cnlDir}/{msgChat}/"
             log = f"{cnlDir}/{msgChat}.log"
 
-        elif isGroup:
-            dir = grpDir
-            down = f"{grpDir}/{msgChat}/"
-            log = f"{grpDir}/{msgChat}.log"
-
-        log_staff(f"""Private: {isPrivate}
+        log_staff(f"""
+            Private: {isPrivate}
             Group: {isGroup}
             Channel: {isChannel}
             Chat: {msgChat}
             Sender: {msgSender}
-            Directory: {dir}""")
+            Directory: {dir}
+""")
 
         if event.media:  # Если сообщение содержит медиа
             file_path = await event.download_media(file=down)
